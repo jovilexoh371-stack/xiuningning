@@ -1,0 +1,513 @@
+　　<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>与修宁</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"SimSun","Noto Serif SC",serif;height:100vh;display:flex;justify-content:center;align-items:center;background:#ede8e3}
+#app{width:100%;max-width:520px;height:100vh;display:flex;flex-direction:column;background:#fff;position:relative;overflow:hidden}
+.bg-layer{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center;background-repeat:no-repeat;opacity:0.85}
+.content-layer{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;background:rgba(255,255,255,0.75);height:100%;overflow:hidden}
+#header{background:rgba(255,255,255,0.9);border-bottom:1px solid #000;padding:10px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+#header img{width:30px;height:30px;border-radius:50%;border:1px solid #000;object-fit:cover}
+#header .name{font-size:15px;font-weight:600;flex:1}
+#narrationBar{display:flex;gap:4px;padding:4px 10px;border-bottom:1px solid #000;background:rgba(255,255,255,0.8);align-items:center;flex-shrink:0}
+#narrationInput{flex:1;border:1px solid #000;border-radius:4px;padding:3px 6px;font-size:10px;outline:none;font-family:inherit;background:#fff}
+#narrationSend{border:1px solid #000;background:#000;color:#fff;padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer}
+#narrationDisplay{padding:3px 10px;border-bottom:1px solid #000;font-size:10px;color:#666;background:rgba(255,255,255,0.6);font-style:italic;display:none;cursor:pointer}
+#archiveBanner{display:none;padding:6px 12px;border-bottom:1px solid #000;font-size:11px;justify-content:space-between;align-items:center;flex-shrink:0;background:#f0f0ff;color:#4040a0}
+#archiveBanner button{background:#e0e0ff;border:1px solid #000;padding:3px 10px;border-radius:4px;font-size:10px;cursor:pointer}
+.chat-area{flex:1;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch}
+.msg-row{display:flex;align-items:flex-end;gap:6px;margin-bottom:3px}
+.msg-row.user{justify-content:flex-end}
+.msg-row.xn{justify-content:flex-start}
+.avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:1px solid #000;overflow:hidden;background:#f5f5f5}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.bubble-wrapper{display:flex;flex-direction:column;min-width:0;flex-shrink:1;max-width:75%}
+.bubble-wrapper.user-wrapper{align-items:flex-end}
+.bubble-wrapper.xn-wrapper{align-items:flex-start}
+.bubble{padding:5px 9px;font-size:13px;line-height:1.6;word-break:break-word;white-space:pre-wrap;border:1px solid #000;border-radius:5px;overflow-wrap:break-word;writing-mode:horizontal-tb !important}
+.bubble.user{background:#fff;color:#000}
+.bubble.xn{background:#000;color:#fff}
+.msg-time{font-size:8px;color:#aaa;margin-top:2px}
+.msg-actions{display:flex;gap:3px;margin-top:3px;opacity:0.7;flex-wrap:wrap}
+.msg-actions button{background:none;border:none;font-size:9px;cursor:pointer;color:#888;padding:1px 5px}
+.input-area{border-top:1px solid #000;padding:6px 10px;display:flex;gap:6px;background:rgba(255,255,255,0.9);flex-shrink:0;align-items:flex-end}
+.input-area textarea{flex:1;border:1px solid #000;border-radius:6px;padding:6px 10px;font-size:12px;outline:none;resize:none;height:34px;max-height:80px;overflow-y:auto;line-height:1.4;font-family:inherit;background:#fff;color:#000}
+.input-area button{background:#000;color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
+.input-area button:disabled{background:#ccc}
+#autoToggle{border:1px solid #000;background:#000;color:#fff;padding:4px 8px;font-size:10px;cursor:pointer;border-radius:4px;margin-right:auto;font-family:inherit}
+#fileSendBtn{background:#fff;color:#000;border:1px solid #000;padding:4px 8px;font-size:12px;cursor:pointer;border-radius:6px;margin-right:2px}
+.typing-indicator{display:flex;align-items:center;gap:4px;padding:6px 10px;align-self:flex-start}
+.typing-indicator .typing-avatar{width:24px;height:24px;border-radius:50%;border:1px solid #000;overflow:hidden;flex-shrink:0}
+.typing-indicator .typing-avatar img{width:100%;height:100%;object-fit:cover}
+.typing-dots{display:flex;gap:4px}
+.typing-dots span{width:5px;height:5px;background:#aaa;border-radius:50%;animation:blink 1.2s infinite}
+.typing-dots span:nth-child(2){animation-delay:0.2s}
+.typing-dots span:nth-child(3){animation-delay:0.4s}
+@keyframes blink{0%,80%,100%{opacity:0.2;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
+
+/* 设置弹窗 */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:#fff;border:1px solid #000;border-radius:8px;width:90%;max-width:500px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,0.15);overflow:hidden}
+.setting-tabs{display:flex;border-bottom:1px solid #000;background:#f5f5f5;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.setting-tabs button{flex-shrink:0;padding:10px 14px;font-size:11px;border:none;background:transparent;cursor:pointer;font-family:inherit;color:#666;border-bottom:2px solid transparent;white-space:nowrap}
+.setting-tabs button.active{color:#000;border-bottom-color:#000;font-weight:600}
+.setting-pages{flex:1;overflow-y:auto;padding:20px}
+.setting-page{display:none}
+.setting-page.active{display:block}
+.setting-page label{font-size:12px;color:#666;display:block;margin-bottom:3px;margin-top:12px}
+.setting-page label:first-child{margin-top:0}
+.setting-page textarea{width:100%;border:1px solid #000;border-radius:4px;padding:10px 12px;font-size:12px;font-family:inherit;resize:vertical;height:100px;background:#fafafa;overflow-y:auto}
+.setting-page input[type=text],.setting-page input[type=number]{width:100%;border:1px solid #000;border-radius:4px;padding:8px 12px;font-size:12px;font-family:inherit;background:#fafafa}
+.setting-page .color-row{display:flex;gap:8px;align-items:center;margin-top:4px}
+.setting-page .color-row input[type=color]{width:36px;height:36px;border:1px solid #000;border-radius:4px;cursor:pointer}
+.modal-btns{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;flex-wrap:wrap;border-top:1px solid #eee;padding-top:12px;flex-shrink:0;padding:12px 20px}
+.modal-btns button{padding:6px 14px;border-radius:4px;font-size:12px;cursor:pointer;border:1px solid #000;background:#f5f5f5;font-family:inherit}
+.modal-btns .primary{background:#000;color:#fff;border-color:#000}
+.archive-list-item{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;margin:2px 0;background:#fafafa;border:1px solid #000;border-radius:4px;font-size:11px}
+.archive-list-item button{border:1px solid #000;background:#f5f5f5;padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;margin-left:4px;font-family:inherit}
+.schedule-item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;margin:4px 0;background:#fafafa;border:1px solid #000;border-radius:4px;font-size:11px}
+.schedule-item button{border:1px solid #000;background:#f5f5f5;padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;margin-left:4px;font-family:inherit}
+
+/* 裁剪弹窗 */
+.crop-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center}
+.crop-overlay.show{display:flex}
+.crop-box{background:#fff;border:1px solid #000;border-radius:8px;padding:20px;width:90%;max-width:420px}
+.crop-preview-area{width:100%;height:280px;background:#e0e0e0;margin:10px 0;position:relative;overflow:hidden;border:1px solid #ccc;border-radius:4px}
+.crop-preview-area img{position:absolute;top:0;left:0;max-width:none;transform-origin:0 0;pointer-events:none}
+.crop-rect{position:absolute;border:2px solid #f5a623;box-shadow:0 0 0 9999px rgba(0,0,0,0.5);cursor:move;z-index:2}
+.crop-handle{position:absolute;width:24px;height:24px;background:#f5a623;border:2px solid #fff;border-radius:4px;pointer-events:auto;z-index:3}
+.crop-handle.tl{top:-12px;left:-12px;cursor:nwse-resize}
+.crop-handle.tr{top:-12px;right:-12px;cursor:nesw-resize}
+.crop-handle.bl{bottom:-12px;left:-12px;cursor:nesw-resize}
+.crop-handle.br{bottom:-12px;right:-12px;cursor:nwse-resize}
+.crop-handle.tm{top:-12px;left:50%;margin-left:-12px;cursor:ns-resize}
+.crop-handle.bm{bottom:-12px;left:50%;margin-left:-12px;cursor:ns-resize}
+.crop-handle.ml{top:50%;left:-12px;margin-top:-12px;cursor:ew-resize}
+.crop-handle.mr{top:50%;right:-12px;margin-top:-12px;cursor:ew-resize}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="bgImg" class="bg-layer" style="background-image:none;"></div>
+  <div class="content-layer">
+    <div id="header">
+      <img id="headerHerAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23d9d9d9'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20'%3E蛇%3C/text%3E%3C/svg%3E">
+      <span class="name">修宁</span>
+      <img id="headerMyAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23fce4d6'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20'%3E花%3C/text%3E%3C/svg%3E">
+      <button id="settingsBtn" style="border:1px solid #000;background:#fff;padding:3px 8px;font-size:11px;cursor:pointer;border-radius:4px;">设置</button>
+    </div>
+    <div id="archiveBanner"><span>存档：<strong id="archiveName"></strong></span><button onclick="exitArchive()">返回主线</button></div>
+    <div id="narrationBar"><input type="text" id="narrationInput" placeholder="场景旁白..."><button id="narrationSendBtn">发送</button></div>
+    <div id="narrationDisplay" onclick="clearNarration()"></div>
+    <div class="chat-area" id="chat"></div>
+    <div id="typingIndicator" class="typing-indicator" style="display:none;">
+      <div class="typing-avatar"><img id="typingAvatarImg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23d9d9d9'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='20'%3E蛇%3C/text%3E%3C/svg%3E" style="width:100%;height:100%;object-fit:cover;"></div>
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+    </div>
+    <div class="input-area">
+      <button id="autoToggleBtn">主动</button>
+      <button id="fileSendBtn" onclick="sendFile()">文件</button>
+      <textarea id="msgInput" placeholder="对修宁说..." rows="1"></textarea>
+      <button id="sendBtn">发送</button>
+    </div>
+  </div>
+</div>
+
+<!-- 设置弹窗 -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-box">
+    <div class="setting-tabs">
+      <button class="active" data-tab="tab-basic">基础设置</button>
+      <button data-tab="tab-persona">人设</button>
+      <button data-tab="tab-world">世界观</button>
+      <button data-tab="tab-appearance">外观</button>
+      <button data-tab="tab-archive">存档</button>
+      <button data-tab="tab-schedule">定时消息</button>
+    </div>
+    <div class="setting-pages">
+      <div class="setting-page active" id="tab-basic">
+        <label>API密钥</label><input type="text" id="apiKeyEdit" placeholder="sk-...">
+        <label>模型名</label><input type="text" id="modelEdit" placeholder="gpt-3.5-turbo">
+        <label>对方名字</label><input type="text" id="herNameEdit" placeholder="修宁">
+        <label>自己名字</label><input type="text" id="myNameEdit" placeholder="我">
+        <label>携带历史条数</label><input type="number" id="ctxCountEdit" min="4" max="100" value="40">
+        <label>主动消息间隔(分钟, 0=关闭)</label><input type="number" id="autoIntervalEdit" min="0" max="120" value="5">
+        <label style="color:#c00;">强制修正指令</label><textarea id="overrideEdit"></textarea>
+        <label>关键记忆</label><textarea id="memoriesEdit"></textarea>
+        <label>美化指令</label><textarea id="customCssEdit"></textarea>
+      </div>
+      <div class="setting-page" id="tab-persona">
+        <label>修宁核心人设</label><textarea id="personaEdit"></textarea>
+        <label>修宁外貌描写</label><textarea id="appearanceEdit"></textarea>
+        <label>自我认知</label><textarea id="selfCognitionEdit"></textarea>
+        <label>行动准则与动机</label><textarea id="motivationEdit"></textarea>
+        <label>陈幺幺的人设</label><textarea id="yaoyaoEdit"></textarea>
+      </div>
+      <div class="setting-page" id="tab-world">
+        <label>世界观</label><textarea id="worldviewEdit"></textarea>
+        <label>经历</label><textarea id="backstoryEdit"></textarea>
+        <label>与陈幺幺的羁绊</label><textarea id="bondEdit"></textarea>
+      </div>
+      <div class="setting-page" id="tab-appearance">
+        <label>气泡字体大小</label><input type="number" id="fontSizeEdit" min="10" max="22" value="13">
+        <label>气泡最大宽度(%)</label><input type="number" id="bubbleWidthEdit" min="40" max="95" value="75">
+        <label>聊天背景颜色</label><div class="color-row"><input type="color" id="bgColorPicker" value="#ede8e3"><span> / 上传背景</span><button onclick="document.getElementById('bgInput').click()" style="border:1px solid #000;background:#fff;padding:4px 8px;font-size:10px;cursor:pointer;border-radius:4px;">上传</button><button onclick="clearBackground()" style="border:1px solid #000;background:#fff;padding:4px 8px;font-size:10px;cursor:pointer;border-radius:4px;">清除</button><input type="file" id="bgInput" accept="image/*" style="display:none" onchange="handleBgUpload(event)"></div>
+        <div style="display:flex;gap:6px;margin-top:8px;"><button onclick="applyTheme('dark')" style="background:#333;color:#fff;border:1px solid #333;padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;">深色</button><button onclick="applyTheme('light')" style="background:#fff;color:#333;border:1px solid #000;padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;">浅色</button><button onclick="applyTheme('warm')" style="background:#f5e6d3;color:#5a3e2b;border:1px solid #c0a888;padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;">暖色</button></div>
+        <label>我的气泡颜色</label><input type="color" id="userBubbleColor" value="#ffffff">
+        <label>修宁的气泡颜色</label><input type="color" id="xnBubbleColor" value="#000000">
+        <label>旁白背景颜色</label><input type="color" id="narrationBgColor" value="#f0f0ff">
+        <label>存档横幅背景</label><div class="color-row"><input type="color" id="archiveBannerColor" value="#f0f0ff"><input type="color" id="archiveBannerTextColor" value="#4040a0"></div>
+        <label>我的头像</label><button id="myAvatarBtn" style="border:1px solid #000;background:#fff;padding:4px 8px;font-size:10px;cursor:pointer;border-radius:4px;">上传并裁剪</button>
+        <label>修宁的头像</label><button id="herAvatarBtn" style="border:1px solid #000;background:#fff;padding:4px 8px;font-size:10px;cursor:pointer;border-radius:4px;">上传并裁剪</button>
+      </div>
+      <div class="setting-page" id="tab-archive">
+        <label>新建存档</label>
+        <div style="display:flex;gap:4px;margin-bottom:8px;"><input type="text" id="newArchiveName" placeholder="存档名称" style="flex:1;"><button id="createArchiveBtn" style="background:#228be6;color:#fff;border:1px solid #228be6;padding:4px 8px;border-radius:4px;font-size:10px;cursor:pointer;">创建</button></div>
+        <label>存档列表</label>
+        <div id="archiveList" style="max-height:200px;overflow-y:auto;border:1px solid #000;border-radius:4px;padding:4px;"></div>
+      </div>
+      <div class="setting-page" id="tab-schedule">
+        <label>新建定时消息（24小时制，例：08:00 / 12:00 / 22:30）</label>
+        <div style="display:flex;gap:4px;margin-bottom:4px;"><input type="text" id="scheduleTime" placeholder="12：30" style="width:80px;"><input type="text" id="scheduleContent" placeholder="消息内容" style="flex:1;"><button id="addScheduleBtn" style="background:#228be6;color:#fff;border:1px solid #228be6;padding:4px 8px;border-radius:4px;font-size:10px;cursor:pointer;">添加</button></div>
+        <label>定时消息列表</label>
+        <div id="scheduleList" style="max-height:200px;overflow-y:auto;border:1px solid #000;border-radius:4px;padding:4px;"></div>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button onclick="clearCurrentHistory()" style="color:#c00;">清空记录</button>
+      <button onclick="exportArchive()">导出</button>
+      <button onclick="document.getElementById('importInput').click()">导入</button>
+      <input type="file" id="importInput" accept=".json" style="display:none" onchange="handleImport(event)">
+      <button onclick="closeSettings()">取消</button>
+      <button class="primary" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 裁剪弹窗 -->
+<div class="crop-overlay" id="cropModal">
+  <div class="crop-box">
+    <h3 style="margin-bottom:10px;">裁剪头像 - 拖动黄色边框调整</h3>
+    <div class="crop-preview-area" id="cropPreviewArea">
+      <img id="cropImage" src="" style="position:absolute;top:0;left:0;display:none;">
+      <div class="crop-rect" id="cropRect">
+        <div class="crop-handle tl" data-handle="tl"></div>
+        <div class="crop-handle tr" data-handle="tr"></div>
+        <div class="crop-handle bl" data-handle="bl"></div>
+        <div class="crop-handle br" data-handle="br"></div>
+        <div class="crop-handle tm" data-handle="tm"></div>
+        <div class="crop-handle bm" data-handle="bm"></div>
+        <div class="crop-handle ml" data-handle="ml"></div>
+        <div class="crop-handle mr" data-handle="mr"></div>
+      </div>
+    </div>
+    <div class="modal-btns"><button onclick="closeCrop()">取消</button><button class="primary" onclick="confirmCrop()">确认裁剪</button></div>
+  </div>
+</div>
+
+<script>
+var API_URL = "https://api.gemai.cc/v1/chat/completions";
+var ls = {get:function(k,d){try{var v=localStorage.getItem("xn_"+k);return v?JSON.parse(v):d}catch(e){return d}},set:function(k,v){try{localStorage.setItem("xn_"+k,JSON.stringify(v))}catch(e){}},raw:function(k){try{return localStorage.getItem("xn_"+k)}catch(e){return null}},setRaw:function(k,v){try{localStorage.setItem("xn_"+k,v)}catch(e){}}};
+function getCurrentPrefix(){return currentArchive==="main"?"":currentArchive+"_"}
+function getPrefixed(key){return getCurrentPrefix()+key}
+
+function buildSystem(){var parts=[];var o=ls.raw(getPrefixed("override"))||"";if(o.trim())parts.push("[强制修正指令]\n"+o);var p=ls.raw(getPrefixed("persona"))||"";if(p.trim())parts.push("[核心人设]\n"+p);var a=ls.raw(getPrefixed("appearance"))||"";if(a.trim())parts.push("[外貌描写]\n"+a);var sc=ls.raw(getPrefixed("selfCognition"))||"";if(sc.trim())parts.push("[自我认知]\n"+sc);var w=ls.raw(getPrefixed("worldview"))||"";if(w.trim())parts.push("[世界观]\n"+w);var bs=ls.raw(getPrefixed("backstory"))||"";if(bs.trim())parts.push("[经历]\n"+bs);var b=ls.raw(getPrefixed("bond"))||"";if(b.trim())parts.push("[与陈幺幺的羁绊]\n"+b);var y=ls.raw(getPrefixed("yaoyao"))||"";if(y.trim())parts.push("[陈幺幺的人设]\n"+y);var m=ls.raw(getPrefixed("motivation"))||"";if(m.trim())parts.push("[行动准则与动机]\n"+m);var mm=ls.raw(getPrefixed("memories"))||"";if(mm.trim())parts.push("[关键记忆]\n"+mm);if(currentNarration)parts.push("[当前场景]\n"+currentNarration);if(currentArchive&&currentArchive!=="main"){var list=getArchiveList();for(var i=0;i<list.length;i++){if(list[i].id===currentArchive){parts.push("[特殊剧情设定]\n"+list[i].setting);break}}}return parts.join("\n\n")}
+
+function getApiKey(){return ls.raw("apikey")||"sk-NmB5yuZTi2CN2Mu1eygvWsTd56o2nhNXawxL54haql5VNzbM"}
+function getModel(){return ls.raw("model")||"gpt-3.5-turbo"}
+function getAutoInterval(){return ls.get("autoInterval",5)}
+function getFontSize(){return ls.get(getPrefixed("fontSize"),13)}
+function getBubbleWidth(){return ls.get(getPrefixed("bubbleWidth"),75)}
+function getArchiveList(){return ls.get("archiveList",[])}
+function saveArchiveList(list){ls.set("archiveList",list)}
+function getCurrentArchive(){return ls.raw("currentArchive")||"main"}
+function setCurrentArchive(id){ls.setRaw("currentArchive",id)}
+function getScheduleList(){return ls.get("scheduleList",[])}
+function saveScheduleList(list){ls.set("scheduleList",list)}
+
+var currentNarration="",currentArchive=getCurrentArchive(),autoInterval=getAutoInterval(),autoTimer=null,fontSize=getFontSize(),bubbleWidth=getBubbleWidth(),isSending=false;
+var myAvatarSrc=ls.raw(getPrefixed("myAvatar"))||null,herAvatarSrc=ls.raw(getPrefixed("herAvatar"))||null,bgImageUrl=ls.raw(getPrefixed("bg"))||null,bgColor=ls.raw(getPrefixed("bgColor"))||"#ede8e3",userBubbleColor=ls.raw(getPrefixed("userBubbleColor"))||"#ffffff",xnBubbleColor=ls.raw(getPrefixed("xnBubbleColor"))||"#000000",narrationBgColor=ls.raw(getPrefixed("narrationBgColor"))||"#f0f0ff",archiveBannerColor=ls.raw(getPrefixed("archiveBannerColor"))||"#f0f0ff",archiveBannerTextColor=ls.raw(getPrefixed("archiveBannerTextColor"))||"#4040a0",customCss=ls.raw("customCss")||"";
+
+// 裁剪变量
+var cropType=null,cropImgScale=1,cropImgX=0,cropImgY=0,cropRectX=0,cropRectY=0,cropRectW=180,cropRectH=180;
+var cropImageNaturalWidth=0,cropImageNaturalHeight=0;
+var isDraggingRect=false,isDraggingHandle=false,dragStartX=0,dragStartY=0,dragStartRectX=0,dragStartRectY=0,dragStartRectW=0,dragStartRectH=0,activeHandle=null;
+
+function getContrast(hex){if(!hex||hex.length<7)return"#000";var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return(r*0.299+g*0.587+b*0.114)>150?"#000":"#fff"}
+function applyCustomCss(){var el=document.getElementById("custom-style");if(!el){el=document.createElement("style");el.id="custom-style";document.head.appendChild(el)}el.textContent=customCss}
+function updateAllAvatars(){if(herAvatarSrc)document.getElementById("headerHerAvatar").src=herAvatarSrc;if(myAvatarSrc)document.getElementById("headerMyAvatar").src=myAvatarSrc;var ti=document.getElementById("typingAvatarImg");if(ti&&herAvatarSrc)ti.src=herAvatarSrc}
+function applyAppearance(){var bgDiv=document.getElementById("bgImg");if(bgImageUrl){bgDiv.style.backgroundImage="url("+bgImageUrl+")";bgDiv.style.backgroundColor="transparent"}else{bgDiv.style.backgroundImage="none";bgDiv.style.backgroundColor=bgColor}updateAllAvatars();updateArchiveBanner();var banner=document.getElementById("archiveBanner");banner.style.background=archiveBannerColor;banner.style.color=archiveBannerTextColor;var nd=document.getElementById("narrationDisplay");if(nd)nd.style.background=narrationBgColor}
+function updateArchiveBanner(){var banner=document.getElementById("archiveBanner");if(currentArchive&&currentArchive!=="main"){banner.style.display="flex";document.getElementById("archiveName").textContent=currentArchive}else{banner.style.display="none"}}
+
+function getCurrentHistoryKey(){return getPrefixed("history")}
+function getCurrentHistory(){return ls.get(getCurrentHistoryKey(),[])}
+function saveCurrentHistory(h){ls.set(getCurrentHistoryKey(),h)}
+
+function renderChat(){var chat=document.getElementById("chat");chat.innerHTML="";var history=getCurrentHistory();for(var i=0;i<history.length;i++){if(history[i].role==="summary")continue;appendBubble(history[i].role,history[i].content,i)}chat.scrollTop=chat.scrollHeight}
+
+function appendBubble(role,text,idx){var chat=document.getElementById("chat"),isUser=role==="user",row=document.createElement("div");row.className="msg-row "+(isUser?"user":"xn");var av=document.createElement("div");av.className="avatar "+(isUser?"me":"xn");var avImg=document.createElement("img");avImg.style.width="100%";avImg.style.height="100%";avImg.style.objectFit="cover";if(isUser&&myAvatarSrc)avImg.src=myAvatarSrc;else if(!isUser&&herAvatarSrc)avImg.src=herAvatarSrc;else{av.textContent=isUser?"我":"修";avImg.style.display="none"}av.appendChild(avImg);var wrap=document.createElement("div");wrap.className="bubble-wrapper "+(isUser?"user-wrapper":"xn-wrapper");wrap.style.writingMode="horizontal-tb";var bub=document.createElement("div");bub.className="bubble "+(isUser?"user":"xn");bub.textContent=text;bub.style.fontSize=fontSize+"px";bub.style.background=isUser?userBubbleColor:xnBubbleColor;bub.style.color=getContrast(isUser?userBubbleColor:xnBubbleColor);bub.style.writingMode="horizontal-tb";wrap.appendChild(bub);var timeDiv=document.createElement("div");timeDiv.className="msg-time";var now=new Date();timeDiv.textContent=("0"+now.getHours()).slice(-2)+":"+("0"+now.getMinutes()).slice(-2);wrap.appendChild(timeDiv);if(!isUser&&idx!==undefined&&idx!==null){var actions=document.createElement("div");actions.className="msg-actions";var retryBtn=document.createElement("button");retryBtn.textContent="重试";retryBtn.onclick=(function(i){return function(){regenerateMessage(i)}})(idx);var delBtn=document.createElement("button");delBtn.textContent="删除";delBtn.onclick=(function(i){return function(){deleteMessage(i)}})(idx);actions.appendChild(retryBtn);actions.appendChild(delBtn);wrap.appendChild(actions)}if(isUser&&idx!==undefined&&idx!==null){var ua=document.createElement("div");ua.className="msg-actions";var editBtn=document.createElement("button");editBtn.textContent="编辑";editBtn.onclick=(function(i){return function(){editMessage(i)}})(idx);var udelBtn=document.createElement("button");udelBtn.textContent="删除";udelBtn.onclick=(function(i){return function(){deleteMessage(i)}})(idx);ua.appendChild(editBtn);ua.appendChild(udelBtn);wrap.appendChild(ua)}if(!isUser){row.appendChild(av);row.appendChild(wrap)}else{row.appendChild(wrap);row.appendChild(av)}chat.appendChild(row);chat.scrollTop=chat.scrollHeight}
+
+function editMessage(idx){var old=getCurrentHistory()[idx].content;var n=prompt("修改你的消息：",old);if(n!==null&&n.trim()!==""){var h=getCurrentHistory();h[idx].content=n.trim();h.splice(idx+1);saveCurrentHistory(h);renderChat();setTimeout(function(){sendToAI(n.trim())},100)}}
+function deleteMessage(idx){if(!confirm("删除这条消息？"))return;var h=getCurrentHistory();if(idx>0&&h[idx-1].role==="user")h.splice(idx-1,2);else h.splice(idx,1);saveCurrentHistory(h);renderChat()}
+function regenerateMessage(idx){if(isSending)return;var h=getCurrentHistory();if(idx<=0||h[idx-1].role!=="user")return;var userText=h[idx-1].content;h.splice(idx,1);saveCurrentHistory(h);renderChat();sendToAI(userText)}
+
+function sendToAI(userText){isSending=true;var btn=document.getElementById("sendBtn");btn.disabled=true;btn.textContent="...";showTyping();var msgs=[{role:"system",content:buildSystem()}];var recent=getCurrentHistory().slice(-20);for(var i=0;i<recent.length;i++){if(recent[i].role!=="summary"&&recent[i].type!=="image")msgs.push({role:recent[i].role,content:recent[i].content})}var xhr=new XMLHttpRequest();xhr.open("POST",API_URL,true);xhr.setRequestHeader("Content-Type","application/json");xhr.setRequestHeader("Authorization","Bearer "+getApiKey());xhr.onload=function(){hideTyping();var reply="";if(xhr.status===200){try{var d=JSON.parse(xhr.responseText);if(d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content)reply=d.choices[0].message.content.trim()}catch(e){}}if(!reply)reply="...";var h=getCurrentHistory();h.push({role:"assistant",content:reply});saveCurrentHistory(h);renderChat();isSending=false;btn.disabled=false;btn.textContent="发送"};xhr.onerror=function(){hideTyping();var h=getCurrentHistory();h.push({role:"assistant",content:"网络错误"});saveCurrentHistory(h);renderChat();isSending=false;btn.disabled=false;btn.textContent="发送"};xhr.send(JSON.stringify({model:getModel(),messages:msgs,max_tokens:1000,temperature:0.92}))}
+
+function showTyping(){document.getElementById("typingIndicator").style.display="flex";var img=document.getElementById("typingAvatarImg");if(herAvatarSrc)img.src=herAvatarSrc}
+function hideTyping(){document.getElementById("typingIndicator").style.display="none"}
+
+function reloadAllSettings(){fontSize=getFontSize();bubbleWidth=getBubbleWidth();myAvatarSrc=ls.raw(getPrefixed("myAvatar"))||null;herAvatarSrc=ls.raw(getPrefixed("herAvatar"))||null;bgImageUrl=ls.raw(getPrefixed("bg"))||null;bgColor=ls.raw(getPrefixed("bgColor"))||"#ede8e3";userBubbleColor=ls.raw(getPrefixed("userBubbleColor"))||"#ffffff";xnBubbleColor=ls.raw(getPrefixed("xnBubbleColor"))||"#000000";narrationBgColor=ls.raw(getPrefixed("narrationBgColor"))||"#f0f0ff";archiveBannerColor=ls.raw(getPrefixed("archiveBannerColor"))||"#f0f0ff";archiveBannerTextColor=ls.raw(getPrefixed("archiveBannerTextColor"))||"#4040a0";applyAppearance();renderChat();clearInterval(autoTimer);autoInterval=getAutoInterval();if(autoInterval>0)autoTimer=setInterval(checkAuto,autoInterval*60*1000)}
+
+function enterArchive(id){currentArchive=id;setCurrentArchive(id);reloadAllSettings();updateArchiveBanner();closeSettings()}
+function exitArchive(){currentArchive="main";setCurrentArchive("main");reloadAllSettings();updateArchiveBanner()}
+function createArchive(){var name=document.getElementById("newArchiveName").value.trim();if(!name)return alert("请输入存档名称");var list=getArchiveList();for(var i=0;i<list.length;i++){if(list[i].id===name)return alert("已存在同名存档")}var setting=prompt("请输入该存档的特殊剧情设定：","");if(setting===null)return;list.push({id:name,setting:setting.trim()});saveArchiveList(list);document.getElementById("newArchiveName").value="";renderArchiveList();alert("存档已创建！")}
+function deleteArchive(id){if(!confirm("删除存档「"+id+"」？"))return;var list=getArchiveList();saveArchiveList(list.filter(function(s){return s.id!==id}));var prefix=id+"_";Object.keys(localStorage).forEach(function(k){if(k.startsWith("xn_"+prefix))localStorage.removeItem(k)});if(currentArchive===id)exitArchive();renderArchiveList()}
+function renderArchiveList(){var container=document.getElementById("archiveList");var list=getArchiveList();var html="";for(var i=0;i<list.length;i++){var s=list[i];html+='<div class="archive-list-item"><span>'+s.id+'</span><div><button onclick="enterArchive(\''+s.id+'\')">进入</button><button onclick="deleteArchive(\''+s.id+'\')" style="color:#c00;">删除</button></div></div>'}if(list.length===0)html='<div style="font-size:10px;color:#999;text-align:center;">暂无存档</div>';container.innerHTML=html}
+
+function sendMsg(){if(isSending)return;var input=document.getElementById("msgInput");var text=input.value.trim();if(!text)return;var h=getCurrentHistory();h.push({role:"user",content:text});saveCurrentHistory(h);renderChat();input.value="";lastUserMsgTime=Date.now();sendToAI(text)}
+function sendFile(){var input=document.createElement("input");input.type="file";input.accept=".txt,.json,.csv,.md,.log";input.onchange=function(e){var f=e.target.files[0];if(!f)return;var reader=new FileReader();reader.onload=function(ev){var content=ev.target.result;var displayText="[文件: "+f.name+"]\n"+content.slice(0,500)+(content.length>500?"\n...(内容已截断，完整内容已发送给AI)":"");var h=getCurrentHistory();h.push({role:"user",content:displayText});saveCurrentHistory(h);renderChat();var sys=buildSystem()+"\n用户发送了一个文件("+f.name+")，内容如下：\n"+content;var xhr=new XMLHttpRequest();xhr.open("POST",API_URL,true);xhr.setRequestHeader("Content-Type","application/json");xhr.setRequestHeader("Authorization","Bearer "+getApiKey());xhr.onload=function(){if(xhr.status===200){try{var d=JSON.parse(xhr.responseText);var reply=d.choices[0].message.content.trim();if(reply){var h=getCurrentHistory();h.push({role:"assistant",content:reply});saveCurrentHistory(h);renderChat();lastUserMsgTime=Date.now()}}catch(e){}}};xhr.send(JSON.stringify({model:getModel(),messages:[{role:"system",content:sys},{role:"user",content:"请分析这个文件"}],max_tokens:800,temperature:0.9}))};reader.readAsText(f)};input.click()}
+function sendNarration(){var input=document.getElementById("narrationInput");var text=input.value.trim();if(!text)return;currentNarration=text;var d=document.getElementById("narrationDisplay");d.textContent="场景："+text;d.style.display="block";input.value="";showTyping();var sys=buildSystem()+"\n场景已更新为：「"+text+"」。请根据新场景主动开口说第一句话。";var xhr=new XMLHttpRequest();xhr.open("POST",API_URL,true);xhr.setRequestHeader("Content-Type","application/json");xhr.setRequestHeader("Authorization","Bearer "+getApiKey());xhr.onload=function(){hideTyping();if(xhr.status===200){try{var d=JSON.parse(xhr.responseText);var reply=d.choices[0].message.content.trim();if(reply){var h=getCurrentHistory();h.push({role:"assistant",content:reply});saveCurrentHistory(h);renderChat();lastUserMsgTime=Date.now()}}catch(e){}}};xhr.send(JSON.stringify({model:getModel(),messages:[{role:"system",content:sys},{role:"user",content:"（场景已更新）"}],max_tokens:300,temperature:0.9}))}
+function clearNarration(){currentNarration="";document.getElementById("narrationDisplay").style.display="none"}
+
+function switchSettingTab(tabId){document.querySelectorAll(".setting-tabs button").forEach(function(b){b.classList.remove("active")});document.querySelectorAll(".setting-page").forEach(function(p){p.classList.remove("active")});document.getElementById(tabId).classList.add("active");document.querySelector(".setting-tabs button[data-tab='"+tabId+"']").classList.add("active")}
+
+function openSettings(){
+  document.getElementById("apiKeyEdit").value=getApiKey();document.getElementById("modelEdit").value=getModel();
+  document.getElementById("overrideEdit").value=ls.raw(getPrefixed("override"))||"";
+  document.getElementById("personaEdit").value=ls.raw(getPrefixed("persona"))||"";
+  document.getElementById("appearanceEdit").value=ls.raw(getPrefixed("appearance"))||"";
+  document.getElementById("selfCognitionEdit").value=ls.raw(getPrefixed("selfCognition"))||"";
+  document.getElementById("worldviewEdit").value=ls.raw(getPrefixed("worldview"))||"";
+  document.getElementById("backstoryEdit").value=ls.raw(getPrefixed("backstory"))||"";
+  document.getElementById("bondEdit").value=ls.raw(getPrefixed("bond"))||"";
+  document.getElementById("yaoyaoEdit").value=ls.raw(getPrefixed("yaoyao"))||"";
+  document.getElementById("motivationEdit").value=ls.raw(getPrefixed("motivation"))||"";
+  document.getElementById("memoriesEdit").value=ls.raw(getPrefixed("memories"))||"";
+  document.getElementById("customCssEdit").value=customCss;
+  document.getElementById("herNameEdit").value=ls.raw("herName")||"修宁";
+  document.getElementById("myNameEdit").value=ls.raw("myName")||"我";
+  document.getElementById("ctxCountEdit").value=ls.get("ctx",40);
+  document.getElementById("fontSizeEdit").value=fontSize;
+  document.getElementById("bubbleWidthEdit").value=bubbleWidth;
+  document.getElementById("autoIntervalEdit").value=autoInterval;
+  document.getElementById("bgColorPicker").value=bgColor;
+  document.getElementById("userBubbleColor").value=userBubbleColor;
+  document.getElementById("xnBubbleColor").value=xnBubbleColor;
+  document.getElementById("narrationBgColor").value=narrationBgColor;
+  document.getElementById("archiveBannerColor").value=archiveBannerColor;
+  document.getElementById("archiveBannerTextColor").value=archiveBannerTextColor;
+  renderArchiveList();renderScheduleList();
+  switchSettingTab("tab-basic");
+  document.getElementById("settingsModal").classList.add("show");
+}
+function closeSettings(){document.getElementById("settingsModal").classList.remove("show")}
+function saveSettings(){
+  ls.setRaw("apikey",document.getElementById("apiKeyEdit").value.trim());
+  ls.setRaw("model",document.getElementById("modelEdit").value.trim());
+  ls.setRaw(getPrefixed("override"),document.getElementById("overrideEdit").value.trim());
+  ls.setRaw(getPrefixed("persona"),document.getElementById("personaEdit").value.trim());
+  ls.setRaw(getPrefixed("appearance"),document.getElementById("appearanceEdit").value.trim());
+  ls.setRaw(getPrefixed("selfCognition"),document.getElementById("selfCognitionEdit").value.trim());
+  ls.setRaw(getPrefixed("worldview"),document.getElementById("worldviewEdit").value.trim());
+  ls.setRaw(getPrefixed("backstory"),document.getElementById("backstoryEdit").value.trim());
+  ls.setRaw(getPrefixed("bond"),document.getElementById("bondEdit").value.trim());
+  ls.setRaw(getPrefixed("yaoyao"),document.getElementById("yaoyaoEdit").value.trim());
+  ls.setRaw(getPrefixed("motivation"),document.getElementById("motivationEdit").value.trim());
+  ls.setRaw(getPrefixed("memories"),document.getElementById("memoriesEdit").value.trim());
+  customCss=document.getElementById("customCssEdit").value.trim();ls.setRaw("customCss",customCss);applyCustomCss();
+  var hn=document.getElementById("herNameEdit").value.trim();if(hn){document.querySelector(".name").textContent=hn;ls.setRaw("herName",hn)}
+  fontSize=Math.max(10,Math.min(22,parseInt(document.getElementById("fontSizeEdit").value)||13));ls.set(getPrefixed("fontSize"),fontSize);
+  bubbleWidth=Math.max(40,Math.min(95,parseInt(document.getElementById("bubbleWidthEdit").value)||75));ls.set(getPrefixed("bubbleWidth"),bubbleWidth);
+  autoInterval=Math.max(0,parseInt(document.getElementById("autoIntervalEdit").value)||5);ls.set("autoInterval",autoInterval);
+  clearInterval(autoTimer);
+  if(autoInterval>0)autoTimer=setInterval(checkAuto,autoInterval*60*1000);
+  bgColor=document.getElementById("bgColorPicker").value;ls.setRaw(getPrefixed("bgColor"),bgColor);
+  userBubbleColor=document.getElementById("userBubbleColor").value;ls.setRaw(getPrefixed("userBubbleColor"),userBubbleColor);
+  xnBubbleColor=document.getElementById("xnBubbleColor").value;ls.setRaw(getPrefixed("xnBubbleColor"),xnBubbleColor);
+  narrationBgColor=document.getElementById("narrationBgColor").value;ls.setRaw(getPrefixed("narrationBgColor"),narrationBgColor);
+  archiveBannerColor=document.getElementById("archiveBannerColor").value;ls.setRaw(getPrefixed("archiveBannerColor"),archiveBannerColor);
+  archiveBannerTextColor=document.getElementById("archiveBannerTextColor").value;ls.setRaw(getPrefixed("archiveBannerTextColor"),archiveBannerTextColor);
+  applyAppearance();closeSettings();alert("设置已保存！")
+}
+
+// ========== 定时消息（修复版 — 自动转换全角冒号） ==========
+function addSchedule(){
+  var timeInput = document.getElementById("scheduleTime");
+  var contentInput = document.getElementById("scheduleContent");
+  var time = timeInput.value.trim();
+  var content = contentInput.value.trim();
+  
+  if (!time || !content) {
+    return alert("请同时填写时间和内容。");
+  }
+  
+  // 自动将中文全角冒号"："替换为英文半角冒号":"
+  time = time.replace(/：/g, ":");
+  
+  // 验证时间格式
+  var pattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+  if (!pattern.test(time)) {
+    return alert("时间格式错误！请使用24小时制，例如：\n08:00（早上8点）\n12:00（中午12点）\n22:30（晚上10点半）\n00:15（凌晨0点15分）");
+  }
+  
+  var list = getScheduleList();
+  list.push({ time: time, content: content });
+  saveScheduleList(list);
+  timeInput.value = "";
+  contentInput.value = "";
+  renderScheduleList();
+  alert("定时消息已添加！将在每天 " + time + " 发送。");
+}
+
+function removeSchedule(idx){
+  var list = getScheduleList();
+  list.splice(idx, 1);
+  saveScheduleList(list);
+  renderScheduleList();
+}
+
+function renderScheduleList(){
+  var container = document.getElementById("scheduleList");
+  var list = getScheduleList();
+  var html = "";
+  for (var i = 0; i < list.length; i++) {
+    var s = list[i];
+    html += '<div class="schedule-item"><span>' + s.time + ' - ' + s.content.slice(0, 30) + (s.content.length > 30 ? '...' : '') + '</span><button onclick="removeSchedule(' + i + ')" style="color:#c00;">删除</button></div>';
+  }
+  if (list.length === 0) html = '<div style="font-size:10px;color:#999;text-align:center;">暂无定时消息</div>';
+  container.innerHTML = html;
+}
+
+function checkSchedule(){
+  var now = new Date();
+  var currentTime = ("0" + now.getHours()).slice(-2) + ":" + ("0" + now.getMinutes()).slice(-2);
+  var list = getScheduleList();
+  for (var i = list.length - 1; i >= 0; i--) {
+    if (list[i].time === currentTime) {
+      var h = getCurrentHistory();
+      h.push({ role: "assistant", content: list[i].content });
+      saveCurrentHistory(h);
+      renderChat();
+      list.splice(i, 1);
+      saveScheduleList(list);
+      renderScheduleList();
+    }
+  }
+}
+
+// 裁剪功能
+function openCrop(type){
+  cropType=type;
+  var input=document.createElement("input");input.type="file";input.accept="image/*";
+  input.onchange=function(e){
+    var f=e.target.files[0];if(!f)return;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var img=document.getElementById("cropImage");
+      img.src=ev.target.result;
+      img.style.display="block";
+      img.onload=function(){
+        cropImageNaturalWidth=img.naturalWidth;
+        cropImageNaturalHeight=img.naturalHeight;
+        var area=document.getElementById("cropPreviewArea");
+        var areaW=area.offsetWidth,areaH=area.offsetHeight;
+        cropImgScale=Math.max(areaW/cropImageNaturalWidth,areaH/cropImageNaturalHeight);
+        cropImgX=(areaW-cropImageNaturalWidth*cropImgScale)/2;
+        cropImgY=(areaH-cropImageNaturalHeight*cropImgScale)/2;
+        var boxSize=Math.min(areaW,areaH)*0.7;
+        cropRectW=boxSize;cropRectH=boxSize;
+        cropRectX=(areaW-boxSize)/2;cropRectY=(areaH-boxSize)/2;
+        updateCropDisplay();
+      };
+      document.getElementById("cropModal").classList.add("show");
+    };
+    reader.readAsDataURL(f);
+  };
+  input.click();
+}
+function updateCropDisplay(){
+  var img=document.getElementById("cropImage");
+  var rect=document.getElementById("cropRect");
+  img.style.transform="translate("+cropImgX+"px, "+cropImgY+"px) scale("+cropImgScale+")";
+  img.style.transformOrigin="0 0";
+  rect.style.left=cropRectX+"px";rect.style.top=cropRectY+"px";
+  rect.style.width=cropRectW+"px";rect.style.height=cropRectH+"px";
+}
+function closeCrop(){document.getElementById("cropModal").classList.remove("show")}
+function confirmCrop(){
+  var img=document.getElementById("cropImage");
+  var sx=(cropRectX-cropImgX)/cropImgScale;
+  var sy=(cropRectY-cropImgY)/cropImgScale;
+  var sw=cropRectW/cropImgScale,sh=cropRectH/cropImgScale;
+  sx=Math.max(0,Math.min(sx,cropImageNaturalWidth-sw));
+  sy=Math.max(0,Math.min(sy,cropImageNaturalHeight-sh));
+  if(sx+sw>cropImageNaturalWidth)sw=cropImageNaturalWidth-sx;
+  if(sy+sh>cropImageNaturalHeight)sh=cropImageNaturalHeight-sy;
+  var cropSize=Math.min(sw,sh);sw=cropSize;sh=cropSize;
+  var canvas=document.createElement("canvas");canvas.width=200;canvas.height=200;
+  var ctx=canvas.getContext("2d");ctx.drawImage(img,sx,sy,sw,sh,0,0,200,200);
+  var dataUrl=canvas.toDataURL("image/jpeg",0.9);
+  if(cropType==="my"){myAvatarSrc=dataUrl;ls.setRaw(getPrefixed("myAvatar"),dataUrl)}
+  else{herAvatarSrc=dataUrl;ls.setRaw(getPrefixed("herAvatar"),dataUrl)}
+  updateAllAvatars();closeCrop();
+}
+function bindCropEvents(){
+  var area=document.getElementById("cropPreviewArea");
+  var rect=document.getElementById("cropRect");
+  rect.addEventListener("mousedown",function(e){if(e.target===rect){isDraggingRect=true;dragStartX=e.clientX;dragStartY=e.clientY;dragStartRectX=cropRectX;dragStartRectY=cropRectY;e.preventDefault()}});
+  rect.addEventListener("touchstart",function(e){if(e.target===rect&&e.touches.length===1){isDraggingRect=true;dragStartX=e.touches[0].clientX;dragStartY=e.touches[0].clientY;dragStartRectX=cropRectX;dragStartRectY=cropRectY;e.preventDefault()}},{passive:false});
+  window.addEventListener("mousemove",function(e){if(isDraggingRect){cropRectX=dragStartRectX+e.clientX-dragStartX;cropRectY=dragStartRectY+e.clientY-dragStartY;updateCropDisplay()}if(isDraggingHandle){handleResize(e.clientX,e.clientY);updateCropDisplay()}});
+  window.addEventListener("touchmove",function(e){if(isDraggingRect&&e.touches.length===1){cropRectX=dragStartRectX+e.touches[0].clientX-dragStartX;cropRectY=dragStartRectY+e.touches[0].clientY-dragStartY;updateCropDisplay();e.preventDefault()}if(isDraggingHandle&&e.touches.length===1){handleResize(e.touches[0].clientX,e.touches[0].clientY);updateCropDisplay();e.preventDefault()}},{passive:false});
+  window.addEventListener("mouseup",function(){isDraggingRect=false;isDraggingHandle=false;activeHandle=null});
+  window.addEventListener("touchend",function(){isDraggingRect=false;isDraggingHandle=false;activeHandle=null});
+  var handles=rect.querySelectorAll(".crop-handle");handles.forEach(function(h){h.addEventListener("mousedown",function(e){isDraggingHandle=true;activeHandle=h.dataset.handle;dragStartX=e.clientX;dragStartY=e.clientY;dragStartRectX=cropRectX;dragStartRectY=cropRectY;dragStartRectW=cropRectW;dragStartRectH=cropRectH;e.stopPropagation();e.preventDefault()});h.addEventListener("touchstart",function(e){isDraggingHandle=true;activeHandle=h.dataset.handle;dragStartX=e.touches[0].clientX;dragStartY=e.touches[0].clientY;dragStartRectX=cropRectX;dragStartRectY=cropRectY;dragStartRectW=cropRectW;dragStartRectH=cropRectH;e.stopPropagation();e.preventDefault()})});
+  area.addEventListener("wheel",function(e){e.preventDefault();var delta=e.deltaY>0?-0.05:0.05;var ns=cropImgScale+delta;if(ns<0.2)ns=0.2;if(ns>5)ns=5;var areaRect=area.getBoundingClientRect();var mx=e.clientX-areaRect.left,my=e.clientY-areaRect.top;var sc=ns/cropImgScale;cropImgX=mx-(mx-cropImgX)*sc;cropImgY=my-(my-cropImgY)*sc;cropImgScale=ns;updateCropDisplay()});
+}
+function handleResize(cx,cy){var dx=cx-dragStartX,dy=cy-dragStartY,minSize=50;switch(activeHandle){case"tl":cropRectX=dragStartRectX+dx;cropRectY=dragStartRectY+dy;cropRectW=dragStartRectW-dx;cropRectH=dragStartRectH-dy;break;case"tr":cropRectY=dragStartRectY+dy;cropRectW=dragStartRectW+dx;cropRectH=dragStartRectH-dy;break;case"bl":cropRectX=dragStartRectX+dx;cropRectW=dragStartRectW-dx;cropRectH=dragStartRectH+dy;break;case"br":cropRectW=dragStartRectW+dx;cropRectH=dragStartRectH+dy;break;case"tm":cropRectY=dragStartRectY+dy;cropRectH=dragStartRectH-dy;break;case"bm":cropRectH=dragStartRectH+dy;break;case"ml":cropRectX=dragStartRectX+dx;cropRectW=dragStartRectW-dx;break;case"mr":cropRectW=dragStartRectW+dx;break}if(cropRectW<minSize){cropRectW=minSize;if(activeHandle.indexOf("l")>=0)cropRectX=dragStartRectX+dragStartRectW-minSize}if(cropRectH<minSize){cropRectH=minSize;if(activeHandle.indexOf("t")>=0)cropRectY=dragStartRectY+dragStartRectH-minSize}}
+
+function checkAuto(){if(!autoInterval||autoInterval<=0||isSending)return;var now=Date.now();if(now-lastUserMsgTime<autoInterval*60*1000)return;lastUserMsgTime=now;var sys=buildSystem()+"\n主动开口说话。";var xhr=new XMLHttpRequest();xhr.open("POST",API_URL,true);xhr.setRequestHeader("Content-Type","application/json");xhr.setRequestHeader("Authorization","Bearer "+getApiKey());xhr.onload=function(){if(xhr.status===200){try{var d=JSON.parse(xhr.responseText);var reply=d.choices[0].message.content.trim();if(reply){var h=getCurrentHistory();h.push({role:"assistant",content:reply});saveCurrentHistory(h);renderChat()}}catch(e){}}};xhr.send(JSON.stringify({model:getModel(),messages:[{role:"system",content:sys},{role:"user",content:"（主动）"}],max_tokens:200,temperature:0.95}))}
+function toggleAutoMsg(){autoInterval=autoInterval>0?0:5;ls.set("autoInterval",autoInterval);var b=document.getElementById("autoToggleBtn");b.textContent=autoInterval>0?"主动":"手动";b.style.background=autoInterval>0?"#000":"#fff";b.style.color=autoInterval>0?"#fff":"#000";clearInterval(autoTimer);if(autoInterval>0)autoTimer=setInterval(checkAuto,autoInterval*60*1000)}
+
+var lastUserMsgTime=Date.now()-60000;
+function clearCurrentHistory(){if(!confirm("清空当前记录？"))return;saveCurrentHistory([]);renderChat()}
+function applyTheme(scheme){if(scheme==="dark"){bgColor="#1a1a1a";userBubbleColor="#333333";xnBubbleColor="#ffffff";narrationBgColor="#2a2a2a";archiveBannerColor="#2a2a2a";archiveBannerTextColor="#cccccc"}else if(scheme==="light"){bgColor="#ffffff";userBubbleColor="#f0f0f0";xnBubbleColor="#000000";narrationBgColor="#f0f0ff";archiveBannerColor="#f0f0ff";archiveBannerTextColor="#4040a0"}else if(scheme==="warm"){bgColor="#f5e6d3";userBubbleColor="#fff8f0";xnBubbleColor="#4a2c1a";narrationBgColor="#f0e6d3";archiveBannerColor="#f0e6d3";archiveBannerTextColor="#4a2c1a"}document.getElementById("bgColorPicker").value=bgColor;document.getElementById("userBubbleColor").value=userBubbleColor;document.getElementById("xnBubbleColor").value=xnBubbleColor;document.getElementById("narrationBgColor").value=narrationBgColor;document.getElementById("archiveBannerColor").value=archiveBannerColor;document.getElementById("archiveBannerTextColor").value=archiveBannerTextColor;applyAppearance()}
+function handleBgUpload(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){bgImageUrl=ev.target.result;ls.setRaw(getPrefixed("bg"),bgImageUrl);applyAppearance()};r.readAsDataURL(f)}
+function clearBackground(){bgImageUrl=null;ls.setRaw(getPrefixed("bg"),null);applyAppearance()}
+function viewMemories(){var m=ls.raw(getPrefixed("memories"))||"";var n=prompt("当前关键记忆：\n"+(m||"(空)")+"\n\n输入新记忆（每条一行）：",m);if(n!==null){ls.setRaw(getPrefixed("memories"),n||"");alert("记忆已保存！")}}
+function exportArchive(){var d={time:new Date().toISOString(),archive:currentArchive,messages:getCurrentHistory()};var b=new Blob([JSON.stringify(d)],{type:"application/json"});var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="xiuning_"+currentArchive+"_"+new Date().toISOString().slice(0,10)+".json";a.click()}
+function handleImport(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){try{var d=JSON.parse(ev.target.result);if(!d.messages)throw new Error();if(d.archive&&d.archive!==currentArchive){if(!confirm("该存档属于「"+d.archive+"」，确定导入到当前页面吗？"))return}saveCurrentHistory(d.messages);renderChat();alert("导入成功！")}catch(err){alert("格式错误")}};r.readAsText(f)}
+function autoResize(el){el.style.height="34px";el.style.height=Math.min(el.scrollHeight,80)+"px"}
+function handleKey(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg()}}
+
+document.addEventListener("DOMContentLoaded",function(){
+  document.getElementById("settingsBtn").onclick=openSettings;
+  document.getElementById("sendBtn").onclick=sendMsg;
+  document.getElementById("myAvatarBtn").onclick=function(){openCrop("my")};
+  document.getElementById("herAvatarBtn").onclick=function(){openCrop("her")};
+  document.getElementById("narrationSendBtn").onclick=sendNarration;
+  document.getElementById("narrationDisplay").onclick=clearNarration;
+  document.getElementById("createArchiveBtn").onclick=createArchive;
+  document.getElementById("addScheduleBtn").onclick=addSchedule;
+  document.getElementById("msgInput").onkeydown=handleKey;
+  document.getElementById("msgInput").oninput=function(){autoResize(this)};
+  document.getElementById("autoToggleBtn").onclick=toggleAutoMsg;
+  document.getElementById("settingsModal").onclick=function(e){if(e.target===this)closeSettings()};
+  document.getElementById("cropModal").onclick=function(e){if(e.target===this)closeCrop()};
+  document.querySelectorAll(".setting-tabs button").forEach(function(btn){btn.onclick=function(){switchSettingTab(this.dataset.tab)}});
+  bindCropEvents();
+  applyCustomCss();reloadAllSettings();updateArchiveBanner();
+  // 独立的定时消息检查器（每分钟检查一次）
+  setInterval(checkSchedule,60000);
+  // 页面加载时立即检查一次
+  checkSchedule();
+  if(autoInterval>0)autoTimer=setInterval(checkAuto,autoInterval*60*1000);
+  toggleAutoMsg();if(autoInterval>0)toggleAutoMsg();
+});
+</script>
+</body>
+</html>
