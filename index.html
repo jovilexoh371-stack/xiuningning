@@ -1832,7 +1832,18 @@ function _appInit(){
     var u=StorageEngine.getUsage();
     console.log("[Storage] 引擎:"+u.engine+" 用量:"+u.mb+"MB/"+u.limitMB+"MB ("+u.percent+"%)");
   }catch(d){console.error("_appInit error:",d);}
-}
+}// 收到"修宁"的消息时
+MYLOVE.notify({
+  title: '修宁',
+  body: '幺幺，我想你了',
+  url: './'              // 点击通知打开的页面
+});
+
+// 检查权限状态
+console.log(MYLOVE.getPermission());  // 'granted' / 'denied' / 'default'
+
+// 主动让用户授权（比如点击设置按钮里的"开启通知"）
+MYLOVE.requestPermission();
 </script>
 </body>
 </html>
